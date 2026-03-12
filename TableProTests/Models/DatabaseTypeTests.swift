@@ -71,9 +71,9 @@ struct DatabaseTypeTests {
         #expect(result == "\"user\"\"s\"")
     }
 
-    @Test("CaseIterable count is 10")
+    @Test("CaseIterable count is 13")
     func testCaseIterableCount() {
-        #expect(DatabaseType.allCases.count == 10)
+        #expect(DatabaseType.allCases.count == 13)
     }
 
     @Test("Raw value matches display name", arguments: [
@@ -86,7 +86,9 @@ struct DatabaseTypeTests {
         (DatabaseType.redshift, "Redshift"),
         (DatabaseType.mssql, "SQL Server"),
         (DatabaseType.oracle, "Oracle"),
-        (DatabaseType.clickhouse, "ClickHouse")
+        (DatabaseType.clickhouse, "ClickHouse"),
+        (DatabaseType.cassandra, "Cassandra"),
+        (DatabaseType.scylladb, "ScyllaDB")
     ])
     func testRawValueMatchesDisplayName(dbType: DatabaseType, expectedRawValue: String) {
         #expect(dbType.rawValue == expectedRawValue)

@@ -39,6 +39,8 @@ struct ConnectionURLFormatter {
         case .oracle: return "oracle"
         case .clickhouse: return "clickhouse"
         case .duckdb: return "duckdb"
+        case .cassandra: return "cassandra"
+        case .scylladb: return "scylladb"
         }
     }
 

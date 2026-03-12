@@ -285,6 +285,8 @@ extension DatabaseDriver {
                 break  // MongoDB timeout handled per-operation by MongoDBDriver
             case .redis:
                 break  // Redis does not support session-level query timeouts
+            case .cassandra, .scylladb:
+                break  // Cassandra/ScyllaDB timeout handled per-query by driver
             case .mssql:
                 _ = try await execute(query: "SET LOCK_TIMEOUT \(ms)")
             case .oracle:
@@ -359,7 +361,15 @@ enum DatabaseDriverFactory {
         switch connection.type {
         case .mongodb:
             fields["sslCACertPath"] = ssl.caCertificatePath
-        default:
+            fields["mongoReadPreference"] = connection.mongoReadPreference ?? ""
+            fields["mongoWriteConcern"] = connection.mongoWriteConcern ?? ""
+        case .redis:
+            fields["redisDatabase"] = String(connection.redisDatabase ?? 0)
+        case .mssql:
+            fields["mssqlSchema"] = connection.mssqlSchema ?? "dbo"
+        case .oracle:
+            fields["oracleServiceName"] = connection.oracleServiceName ?? ""
+        case .mysql, .mariadb, .sqlite, .clickhouse, .postgresql, .redshift, .cassandra, .scylladb, .duckdb:
             break
         }
 

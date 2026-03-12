@@ -538,6 +538,14 @@ final class SQLCompletionProvider {
             ]
 
 
+        case .cassandra, .scylladb:
+            types += [
+                "ASCII", "VARINT",
+                "UUID", "TIMEUUID",
+                "INET", "COUNTER",
+                "LIST", "SET", "MAP", "TUPLE", "FROZEN",
+            ]
+
         case .sqlite:
             types += [
                 "BLOB",

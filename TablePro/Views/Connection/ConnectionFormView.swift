@@ -773,6 +773,7 @@ struct ConnectionFormView: View {
         case .redis: return "6379"
         case .mssql: return "1433"
         case .oracle: return "1521"
+        case .cassandra, .scylladb: return "9042"
         }
     }
 

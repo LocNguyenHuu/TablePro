@@ -31,6 +31,8 @@ extension MainContentCoordinator {
             template = "db.createView(\"view_name\", \"source_collection\", [\n  {\"$match\": {}},\n  {\"$project\": {\"_id\": 1}}\n])"
         case .redis:
             template = "-- Redis does not support views"
+        case .cassandra, .scylladb:
+            template = "-- Cassandra does not support views via CQL CREATE VIEW"
         }
 
         let payload = EditorTabPayload(
@@ -71,6 +73,8 @@ extension MainContentCoordinator {
                     fallbackSQL = "db.runCommand({\"collMod\": \"\(viewName)\", \"viewOn\": \"source_collection\", \"pipeline\": [{\"$match\": {}}]})"
                 case .redis:
                     fallbackSQL = "-- Redis does not support views"
+                case .cassandra, .scylladb:
+                    fallbackSQL = "-- Cassandra does not support ALTER VIEW"
                 }
 
                 let payload = EditorTabPayload(

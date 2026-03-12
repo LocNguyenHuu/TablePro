@@ -17,7 +17,8 @@ extension AppDelegate {
     private static let databaseURLSchemes: Set<String> = [
         "postgresql", "postgres", "mysql", "mariadb", "sqlite",
         "mongodb", "mongodb+srv", "redis", "rediss", "redshift",
-        "mssql", "sqlserver", "oracle", "duckdb"
+        "mssql", "sqlserver", "oracle", "duckdb",
+        "cassandra", "cql", "scylladb", "scylla"
     ]
 
     static let sqliteFileExtensions: Set<String> = [

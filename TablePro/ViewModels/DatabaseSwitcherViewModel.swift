@@ -194,6 +194,8 @@ final class DatabaseSwitcherViewModel {
             return ["master", "tempdb", "model", "msdb"].contains(name)
         case .oracle:
             return ["SYS", "SYSTEM", "OUTLN", "DBSNMP", "APPQOSSYS", "WMSYS", "XDB"].contains(name)
+        case .cassandra, .scylladb:
+            return name.hasPrefix("system")
         }
     }
 }

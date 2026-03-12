@@ -37,6 +37,8 @@ enum DataTypeCategory: String, CaseIterable {
                 return ["INTEGER", "REAL", "NUMERIC"]
             case .duckdb:
                 return ["INTEGER", "BIGINT", "HUGEINT", "SMALLINT", "TINYINT", "DOUBLE", "FLOAT", "DECIMAL", "REAL", "NUMERIC"]
+            case .cassandra, .scylladb:
+                return ["TINYINT", "SMALLINT", "INT", "BIGINT", "VARINT", "FLOAT", "DOUBLE", "DECIMAL", "COUNTER"]
             case .mongodb:
                 return ["Int32", "Int64", "Double", "Decimal128"]
             case .redis:
@@ -58,6 +60,8 @@ enum DataTypeCategory: String, CaseIterable {
                 return ["TEXT"]
             case .duckdb:
                 return ["VARCHAR", "TEXT", "CHAR", "BPCHAR"]
+            case .cassandra, .scylladb:
+                return ["TEXT", "VARCHAR", "ASCII"]
             case .mongodb:
                 return ["String", "ObjectId", "UUID"]
             case .redis:
@@ -79,6 +83,8 @@ enum DataTypeCategory: String, CaseIterable {
                 return ["DATE", "DATETIME"]
             case .duckdb:
                 return ["DATE", "TIME", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "INTERVAL"]
+            case .cassandra, .scylladb:
+                return ["TIMESTAMP", "DATE", "TIME"]
             case .mongodb:
                 return ["Date", "Timestamp"]
             case .redis:
@@ -100,6 +106,8 @@ enum DataTypeCategory: String, CaseIterable {
                 return ["BLOB"]
             case .duckdb:
                 return ["BLOB", "BYTEA"]
+            case .cassandra, .scylladb:
+                return ["BLOB"]
             case .mongodb:
                 return ["BinData"]
             case .redis:
@@ -121,6 +129,8 @@ enum DataTypeCategory: String, CaseIterable {
                 return ["BOOLEAN"]
             case .duckdb:
                 return ["BOOLEAN", "UUID", "JSON", "LIST", "MAP", "STRUCT", "ENUM", "BIT", "UNION"]
+            case .cassandra, .scylladb:
+                return ["BOOLEAN", "UUID", "TIMEUUID", "INET", "LIST", "SET", "MAP", "TUPLE", "FROZEN"]
             case .mongodb:
                 return ["Boolean", "Object", "Array", "Null", "Regex"]
             case .redis:

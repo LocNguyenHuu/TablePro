@@ -243,10 +243,17 @@ extension MainContentCoordinator {
         WindowOpener.shared.openNativeTab(payload)
     }
 
+    private func currentSchemaName(fallback: String) -> String {
+        if let schemaDriver = DatabaseManager.shared.driver(for: connectionId) as? SchemaSwitchable {
+            return schemaDriver.escapedSchema
+        }
+        return fallback
+    }
+
     private func allTablesMetadataSQL() -> String? {
         switch connection.type {
         case .postgresql:
-            let schema = (DatabaseManager.shared.driver(for: connectionId) as? SchemaSwitchable)?.escapedSchema ?? "public"
+            let schema = currentSchemaName(fallback: "public")
             return """
             SELECT
                 schemaname as schema,
@@ -262,7 +269,7 @@ extension MainContentCoordinator {
             ORDER BY relname
             """
         case .redshift:
-            let schema = (DatabaseManager.shared.driver(for: connectionId) as? SchemaSwitchable)?.escapedSchema ?? "public"
+            let schema = currentSchemaName(fallback: "public")
             return """
             SELECT
                 schema,
@@ -345,7 +352,7 @@ extension MainContentCoordinator {
             ORDER BY t.name
             """
         case .oracle:
-            let schema = (DatabaseManager.shared.driver(for: connectionId) as? SchemaSwitchable)?.escapedSchema ?? "SYSTEM"
+            let schema = currentSchemaName(fallback: "SYSTEM")
             return """
             SELECT
                 OWNER as schema_name,
@@ -357,7 +364,7 @@ extension MainContentCoordinator {
             ORDER BY TABLE_NAME
             """
         case .duckdb:
-            let schema = (DatabaseManager.shared.driver(for: connectionId) as? SchemaSwitchable)?.escapedSchema ?? "main"
+            let schema = currentSchemaName(fallback: "main")
             return """
             SELECT
                 table_schema as schema_name,
@@ -380,6 +387,8 @@ extension MainContentCoordinator {
                 databaseName: connection.database
             )
             runQuery()
+            return nil
+        case .cassandra, .scylladb:
             return nil
         }
     }

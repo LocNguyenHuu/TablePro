@@ -73,6 +73,11 @@ jobs:
                 DISPLAY_NAME="DuckDB Driver"; SUMMARY="DuckDB analytical database driver"
                 DB_TYPE_IDS='["DuckDB"]'; ICON="bird"; BUNDLE_NAME="DuckDBDriver"
                 HOMEPAGE="https://tablepro.app" ;;
+              cassandra)
+                TARGET="CassandraDriver"; BUNDLE_ID="com.TablePro.CassandraDriver"
+                DISPLAY_NAME="Cassandra Driver"; SUMMARY="Apache Cassandra and ScyllaDB driver via DataStax C driver"
+                DB_TYPE_IDS='["Cassandra"]'; ICON="cassandra-icon"; BUNDLE_NAME="CassandraDriver"
+                HOMEPAGE="https://tablepro.app/databases/cassandra" ;;
               *) echo "Unknown plugin: $plugin_name"; return 1 ;;
             esac
           }
@@ -90,6 +95,12 @@ jobs:
             resolve_plugin_info "$PLUGIN_NAME" || continue
 
             echo "Building $TARGET v$VERSION"
+
+            # Build Cassandra dependencies if needed
+            if [ "$PLUGIN_NAME" = "cassandra" ]; then
+              ./scripts/build-cassandra.sh arm64
+              ./scripts/build-cassandra.sh x86_64
+            fi
 
             # Build both architectures
             ./scripts/build-plugin.sh "$TARGET" arm64

@@ -44,7 +44,7 @@ struct SQLStatementGenerator {
         switch databaseType {
         case .postgresql, .redshift, .duckdb:
             return .dollar
-        case .mysql, .mariadb, .sqlite, .mongodb, .redis, .mssql, .oracle, .clickhouse:
+        case .mysql, .mariadb, .sqlite, .mongodb, .redis, .mssql, .oracle, .clickhouse, .cassandra, .scylladb:
             return .questionMark
         }
     }
@@ -299,8 +299,25 @@ struct SQLStatementGenerator {
             guard !conditions.isEmpty else { return nil }
 
             let whereClause = conditions.joined(separator: " AND ")
-            let sql =
-                "UPDATE \(databaseType.quoteIdentifier(tableName)) SET \(setClauses) WHERE \(whereClause)"
+
+            let sql: String
+            switch databaseType {
+            case .mysql, .mariadb, .sqlite:
+                sql =
+                    "UPDATE \(databaseType.quoteIdentifier(tableName)) SET \(setClauses) WHERE \(whereClause) LIMIT 1"
+            case .mssql:
+                sql =
+                    "UPDATE TOP (1) \(databaseType.quoteIdentifier(tableName)) SET \(setClauses) WHERE \(whereClause)"
+            case .oracle:
+                sql =
+                    "UPDATE \(databaseType.quoteIdentifier(tableName)) SET \(setClauses) WHERE \(whereClause) AND ROWNUM = 1"
+            case .clickhouse:
+                sql =
+                    "ALTER TABLE \(databaseType.quoteIdentifier(tableName)) UPDATE \(setClauses) WHERE \(whereClause)"
+            case .postgresql, .redshift, .duckdb, .mongodb, .redis, .cassandra, .scylladb:
+                sql =
+                    "UPDATE \(databaseType.quoteIdentifier(tableName)) SET \(setClauses) WHERE \(whereClause)"
+            }
 
             return ParameterizedStatement(sql: sql, parameters: parameters)
         }
@@ -367,7 +384,24 @@ struct SQLStatementGenerator {
         guard !conditions.isEmpty else { return nil }
 
         let whereClause = conditions.joined(separator: " AND ")
-        let sql = "DELETE FROM \(databaseType.quoteIdentifier(tableName)) WHERE \(whereClause)"
+
+        let sql: String
+        switch databaseType {
+        case .mysql, .mariadb, .sqlite:
+            sql =
+                "DELETE FROM \(databaseType.quoteIdentifier(tableName)) WHERE \(whereClause) LIMIT 1"
+        case .mssql:
+            sql =
+                "DELETE TOP (1) FROM \(databaseType.quoteIdentifier(tableName)) WHERE \(whereClause)"
+        case .oracle:
+            sql =
+                "DELETE FROM \(databaseType.quoteIdentifier(tableName)) WHERE \(whereClause) AND ROWNUM = 1"
+        case .clickhouse:
+            sql =
+                "ALTER TABLE \(databaseType.quoteIdentifier(tableName)) DELETE WHERE \(whereClause)"
+        case .postgresql, .redshift, .duckdb, .mongodb, .redis, .cassandra, .scylladb:
+            sql = "DELETE FROM \(databaseType.quoteIdentifier(tableName)) WHERE \(whereClause)"
+        }
 
         return ParameterizedStatement(sql: sql, parameters: parameters)
     }
