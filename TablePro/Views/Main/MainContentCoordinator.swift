@@ -1368,12 +1368,12 @@ private extension MainContentCoordinator {
         connectionType: DatabaseType,
         schemaResult: SchemaResult?
     ) {
-        let quotedTable = connectionType.quoteIdentifier(tableName)
         Task { [weak self] in
             guard let self else { return }
             try? await Task.sleep(nanoseconds: 200_000_000)
             guard !self.isTearingDown else { return }
             guard let mainDriver = DatabaseManager.shared.driver(for: connectionId) else { return }
+            let quotedTable = mainDriver.quoteIdentifier(tableName)
             let countResult = try? await mainDriver.execute(
                 query: "SELECT COUNT(*) FROM \(quotedTable)"
             )
@@ -1444,10 +1444,10 @@ private extension MainContentCoordinator {
         capturedGeneration: Int,
         connectionType: DatabaseType
     ) {
-        let quotedTable = connectionType.quoteIdentifier(tableName)
         Task { [weak self] in
             guard let self else { return }
             guard let mainDriver = DatabaseManager.shared.driver(for: connectionId) else { return }
+            let quotedTable = mainDriver.quoteIdentifier(tableName)
             let countResult = try? await mainDriver.execute(
                 query: "SELECT COUNT(*) FROM \(quotedTable)"
             )
