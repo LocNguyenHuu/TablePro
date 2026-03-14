@@ -38,6 +38,12 @@ final class CassandraPlugin: NSObject, TableProPlugin, DriverPlugin {
 private actor CassandraConnectionActor {
     private static let logger = Logger(subsystem: "com.TablePro.CassandraDriver", category: "Connection")
 
+    nonisolated(unsafe) private static let isoFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
     private var cluster: OpaquePointer? // CassCluster*
     private var session: OpaquePointer? // CassSession*
     private var currentKeyspace: String?
@@ -69,7 +75,11 @@ private actor CassandraConnectionActor {
 
         // SSL/TLS
         if sslMode != "Disabled" {
-            let ssl = cass_ssl_new()
+            guard let ssl = cass_ssl_new() else {
+                cass_cluster_free(cluster)
+                self.cluster = nil
+                throw CassandraPluginError.connectionFailed("Failed to create SSL context")
+            }
 
             if sslMode == "Verify CA" || sslMode == "Verify Identity" {
                 cass_ssl_set_verify_flags(ssl, Int32(CASS_SSL_VERIFY_PEER_CERT.rawValue))
@@ -77,7 +87,11 @@ private actor CassandraConnectionActor {
                 if let caCertPath = sslCaCertPath, !caCertPath.isEmpty,
                    let certData = FileManager.default.contents(atPath: caCertPath),
                    let certString = String(data: certData, encoding: .utf8) {
-                    cass_ssl_add_trusted_cert(ssl, certString)
+                    let rc = cass_ssl_add_trusted_cert(ssl, certString)
+                    if rc != CASS_OK {
+                        Self.logger.warning("Failed to add CA certificate, proceeding without verification")
+                        cass_ssl_set_verify_flags(ssl, Int32(CASS_SSL_VERIFY_NONE.rawValue))
+                    }
                 }
             } else {
                 // "Preferred" / "Required" — encrypt but skip cert verification
@@ -437,9 +451,7 @@ private actor CassandraConnectionActor {
             var timestamp: Int64 = 0
             if cass_value_get_int64(value, &timestamp) == CASS_OK {
                 let date = Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                return formatter.string(from: date)
+                return isoFormatter.string(from: date)
             }
             return nil
 
@@ -650,7 +662,12 @@ final class CassandraPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func disconnect() {
         let actor = connectionActor
-        Task { await actor.close() }
+        let semaphore = DispatchSemaphore(value: 0)
+        Task {
+            await actor.close()
+            semaphore.signal()
+        }
+        semaphore.wait()
         stateLock.lock()
         _currentKeyspace = nil
         _cachedVersion = nil
@@ -696,15 +713,17 @@ final class CassandraPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     // MARK: - Pagination
 
     func fetchRowCount(query: String) async throws -> Int {
-        let countQuery = "SELECT COUNT(*) FROM (\(stripTrailingSemicolon(query)))"
-        let result = try await execute(query: countQuery)
-        guard let firstRow = result.rows.first, let countStr = firstRow.first else { return 0 }
-        return Int(countStr ?? "0") ?? 0
+        // CQL does not support subqueries, so we can't wrap an arbitrary query in SELECT COUNT(*) FROM (...).
+        // Return -1 to signal unknown count; the UI will hide the total page count.
+        -1
     }
 
     func fetchRows(query: String, offset: Int, limit: Int) async throws -> PluginQueryResult {
-        // Cassandra doesn't support OFFSET natively.
-        // For paginated browsing, we use LIMIT and let the default protocol handle paging.
+        // CQL does not support OFFSET. Only the first page (offset=0) can be fetched via simple LIMIT.
+        // For offset>0, throw so the caller knows pagination is unsupported for arbitrary queries.
+        if offset > 0 {
+            throw CassandraPluginError.unsupportedOperation
+        }
         let baseQuery = stripTrailingSemicolon(query)
         let paginatedQuery = "\(baseQuery) LIMIT \(limit)"
         return try await execute(query: paginatedQuery)
