@@ -33,7 +33,7 @@ internal final class CassandraPlugin: NSObject, TableProPlugin, DriverPlugin {
             section: .advanced
         ),
     ]
-    static let additionalDatabaseTypeIds: [String] = []
+    static let additionalDatabaseTypeIds: [String] = ["ScyllaDB"]
 
     func createDriver(config: DriverConnectionConfig) -> any PluginDatabaseDriver {
         CassandraPluginDriver(config: config)
