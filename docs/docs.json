@@ -233,6 +233,8 @@
                   "zh/databases/redshift",
                   "zh/databases/oracle",
                   "zh/databases/clickhouse",
+                  "zh/databases/cassandra",
+                  "zh/databases/duckdb",
                   "zh/databases/mssql",
                   "zh/databases/oracle",
                   "zh/databases/ssh-tunneling"
