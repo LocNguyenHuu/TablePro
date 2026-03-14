@@ -35,6 +35,75 @@ internal final class CassandraPlugin: NSObject, TableProPlugin, DriverPlugin {
     ]
     static let additionalDatabaseTypeIds: [String] = ["ScyllaDB"]
 
+    // MARK: - UI/Capability Metadata
+
+    static let urlSchemes: [String] = ["cassandra", "cql", "scylladb", "scylla"]
+    static let requiresAuthentication = false
+    static let supportsForeignKeys = false
+    static let brandColorHex = "#26A0D8"
+    static let queryLanguageName = "CQL"
+    static let supportsDatabaseSwitching = true
+    static let databaseGroupingStrategy: GroupingStrategy = .byDatabase
+    static let defaultGroupName = "default"
+    static let systemDatabaseNames: [String] = [
+        "system", "system_schema", "system_auth",
+        "system_distributed", "system_traces", "system_virtual_schema",
+    ]
+    static let supportsImport = false
+    static let supportsExport = true
+    static let supportsCascadeDrop = false
+    static let supportsForeignKeyDisable = false
+    static let supportsSSH = true
+    static let supportsSSL = true
+    static let columnTypesByCategory: [String: [String]] = [
+        "Numeric": ["TINYINT", "SMALLINT", "INT", "BIGINT", "VARINT", "FLOAT", "DOUBLE", "DECIMAL", "COUNTER"],
+        "String": ["TEXT", "VARCHAR", "ASCII"],
+        "Date": ["TIMESTAMP", "DATE", "TIME"],
+        "Binary": ["BLOB"],
+        "Boolean": ["BOOLEAN"],
+        "Other": ["UUID", "TIMEUUID", "INET", "LIST", "SET", "MAP", "TUPLE", "FROZEN"],
+    ]
+
+    static var sqlDialect: SQLDialectDescriptor? {
+        SQLDialectDescriptor(
+            identifierQuote: "\"",
+            keywords: [
+                "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "IN", "AS",
+                "ORDER", "BY", "LIMIT",
+                "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE",
+                "CREATE", "ALTER", "DROP", "TABLE", "INDEX", "VIEW",
+                "PRIMARY", "KEY", "ADD", "COLUMN", "RENAME",
+                "NULL", "IS", "ASC", "DESC", "DISTINCT",
+                "CASE", "WHEN", "THEN", "ELSE", "END",
+                "KEYSPACE", "USE", "TRUNCATE", "BATCH", "GRANT", "REVOKE",
+                "CLUSTERING", "PARTITION", "TTL", "WRITETIME",
+                "ALLOW FILTERING", "IF NOT EXISTS", "IF EXISTS",
+                "USING TIMESTAMP", "USING TTL",
+                "MATERIALIZED VIEW", "CONTAINS", "FROZEN", "COUNTER", "TOKEN",
+            ],
+            functions: [
+                "COUNT", "SUM", "AVG", "MAX", "MIN",
+                "NOW", "UUID", "TOTIMESTAMP", "TOKEN", "TTL", "WRITETIME",
+                "MINTIMEUUID", "MAXTIMEUUID", "TODATE", "TOUNIXTIMESTAMP",
+                "CAST",
+            ],
+            dataTypes: [
+                "TEXT", "VARCHAR", "ASCII",
+                "INT", "BIGINT", "SMALLINT", "TINYINT", "VARINT",
+                "FLOAT", "DOUBLE", "DECIMAL",
+                "BOOLEAN", "UUID", "TIMEUUID",
+                "TIMESTAMP", "DATE", "TIME",
+                "BLOB", "INET", "COUNTER",
+                "LIST", "SET", "MAP", "TUPLE", "FROZEN",
+            ],
+            regexSyntax: .unsupported,
+            booleanLiteralStyle: .truefalse,
+            likeEscapeStyle: .explicit,
+            paginationStyle: .limit,
+            autoLimitStyle: .limit
+        )
+    }
+
     func createDriver(config: DriverConnectionConfig) -> any PluginDatabaseDriver {
         CassandraPluginDriver(config: config)
     }
